@@ -2,6 +2,8 @@
 
 This project is a Relay-Compliant GraphQL Pagination Service for Developer Search. It enables clients to query and paginate through a list of software developers filtered by location, department, and designation.
 
+>rough work Repo-  https://github.com/Shriya-Chauhan/relayPagination-rough
+
 ## What’s Implemented
 
 This GraphQL pagination service currently supports:
@@ -23,6 +25,7 @@ This GraphQL pagination service currently supports:
 - Modular project structure
 - Dummy data seeding with 100+ developer records
 - Sample GraphQL queries included
+
 
 ## 📁 Project Structure
 
