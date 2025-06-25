@@ -14,6 +14,7 @@ const cities = [
 
 async function main() {
   // Optional: To clear previously seeded  data
+  // comment  lines 18 and 19 if you want to keep existing data
   await prisma.developer.deleteMany({});
   await prisma.project.deleteMany({});
 
