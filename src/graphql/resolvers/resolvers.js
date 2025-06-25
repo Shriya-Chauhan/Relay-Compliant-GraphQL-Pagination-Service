@@ -55,8 +55,8 @@ export const resolvers = {
       const totalCount = await prisma.developer.count({ where: filters });
       logger.info({ totalCount }, "Total matching developers");
 
-      // Determining base take value
-      const baseTake = first || last || 20;
+      //Determining the actual requested count
+      const requestedCount = first || last || 20;
 
       // Base pagination args
       let paginationArgs = {
@@ -65,7 +65,7 @@ export const resolvers = {
         include: {
           project: true,
         },
-        take: baseTake + 1, //  Take one extra
+        take: requestedCount + 1, // Always take one extra
       };
 
       // Cursor Logic — Forward Pagination
@@ -100,7 +100,8 @@ export const resolvers = {
           { [sortField]: reverseOrder },
           { id: reverseOrder },
         ];
-        paginationArgs.take = last + 1; // Take one extra for backward pagination
+        // Use requestedCount + 1 for consistency
+        paginationArgs.take = requestedCount + 1;
 
         paginationArgs.where = {
           AND: [
@@ -125,19 +126,34 @@ export const resolvers = {
       let nodes = await prisma.developer.findMany(paginationArgs);
       logger.info({ count: nodes.length }, "Developers fetched");
 
-      //Reverse results FIRST for backward pagination
+      // Reverse results for backward pagination
       if (before && last) {
         nodes.reverse();
       }
 
-      // Determine pagination state AFTER reversing
-      const hasNext = first ? nodes.length > baseTake : !!before;
-      const hasPrev = last ? nodes.length > baseTake : !!after;
+      // Determining if there are more results
+      const hasMoreResults = nodes.length > requestedCount;
 
-      // Remove extra item if needed
-      const actualNodes = nodes.length > baseTake ? nodes.slice(0, -1) : nodes;
+      // Proper pagination logic
+      let hasNext = false;
+      let hasPrev = false;
 
-      //  Create edges from actualNodes
+      if (first) {
+        // Forward pagination
+        hasNext = hasMoreResults; //Are there more items after current page?
+        hasPrev = !!after; // Are there items before current page?
+      } else if (last) {
+        // Backward pagination
+        hasNext = !!before; // Are there items after current page?" (if we have 'before' cursor, there are items after)
+        hasPrev = hasMoreResults; //Are there more items before current page?"
+      }
+
+      // Remove the extra item if we got it
+      const actualNodes = hasMoreResults
+        ? nodes.slice(0, requestedCount)
+        : nodes;
+
+      // Create edges
       const edges = actualNodes.map((dev) => ({
         cursor: encodeCursor({
           sortValue: dev[sortField],
@@ -146,8 +162,9 @@ export const resolvers = {
         node: dev,
       }));
 
-      const startCursor = edges[0]?.cursor || "";
-      const endCursor = edges[edges.length - 1]?.cursor || "";
+      const startCursor = edges.length > 0 ? edges[0].cursor : null;
+      const endCursor =
+        edges.length > 0 ? edges[edges.length - 1].cursor : null;
 
       logger.debug(
         {
@@ -157,6 +174,8 @@ export const resolvers = {
           endCursor,
           actualCount: actualNodes.length,
           totalFetched: nodes.length,
+          hasMoreResults,
+          paginationDirection: first ? "forward" : "backward",
         },
         "Page info"
       );
