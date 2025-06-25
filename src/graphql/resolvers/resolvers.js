@@ -22,7 +22,7 @@ export const resolvers = {
 
       const filters = {};
 
-      //  Handle filters
+      // Handle filters
       if (developerFilter?.location?.state) {
         filters.state = developerFilter.location.state;
       }
@@ -55,6 +55,9 @@ export const resolvers = {
       const totalCount = await prisma.developer.count({ where: filters });
       logger.info({ totalCount }, "Total matching developers");
 
+      // Determining base take value
+      const baseTake = first || last || 20;
+
       // Base pagination args
       let paginationArgs = {
         where: filters,
@@ -62,7 +65,7 @@ export const resolvers = {
         include: {
           project: true,
         },
-        take: first || last || 50,
+        take: baseTake + 1, //  Take one extra
       };
 
       // Cursor Logic — Forward Pagination
@@ -88,7 +91,7 @@ export const resolvers = {
         };
       }
 
-      //  Cursor Logic — Backward Pagination
+      // Cursor Logic — Backward Pagination
       if (before && last) {
         const { sortValue, id } = decodeCursor(before);
         const reverseOrder = orderDirection === "asc" ? "desc" : "asc";
@@ -97,7 +100,7 @@ export const resolvers = {
           { [sortField]: reverseOrder },
           { id: reverseOrder },
         ];
-        paginationArgs.take = last;
+        paginationArgs.take = last + 1; // Take one extra for backward pagination
 
         paginationArgs.where = {
           AND: [
@@ -122,14 +125,20 @@ export const resolvers = {
       let nodes = await prisma.developer.findMany(paginationArgs);
       logger.info({ count: nodes.length }, "Developers fetched");
 
+      //Reverse results FIRST for backward pagination
       if (before && last) {
         nodes.reverse();
-        // Prisma fetches in reversed order for `before + last`, so we reverse to restore correct logical order.
-        // Prisma doesn't support backward pagination natively.
       }
 
-      //Edges
-      const edges = nodes.map((dev) => ({
+      // Determine pagination state AFTER reversing
+      const hasNext = first ? nodes.length > baseTake : !!before;
+      const hasPrev = last ? nodes.length > baseTake : !!after;
+
+      // Remove extra item if needed
+      const actualNodes = nodes.length > baseTake ? nodes.slice(0, -1) : nodes;
+
+      //  Create edges from actualNodes
+      const edges = actualNodes.map((dev) => ({
         cursor: encodeCursor({
           sortValue: dev[sortField],
           id: dev.id,
@@ -140,11 +149,17 @@ export const resolvers = {
       const startCursor = edges[0]?.cursor || "";
       const endCursor = edges[edges.length - 1]?.cursor || "";
 
-      // Pagination metadata
-      const hasNext = first ? nodes.length === first : !!before;
-      const hasPrev = last ? nodes.length === last : !!after;
-
-      logger.debug({ hasNext, hasPrev, startCursor, endCursor }, "Page info");
+      logger.debug(
+        {
+          hasNext,
+          hasPrev,
+          startCursor,
+          endCursor,
+          actualCount: actualNodes.length,
+          totalFetched: nodes.length,
+        },
+        "Page info"
+      );
 
       return {
         totalCount,
