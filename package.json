@@ -1,0 +1,30 @@
+{
+  "name": "relay-pagination-devs",
+  "version": "1.0.0",
+  "description": "Relay-Compliant GraphQL Pagination Service for Developer Search ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon ./src/index.js",
+    "seed": "node prisma/seed.js"
+  },
+  "author": "Shriya Chauhan",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@apollo/server": "^4.12.2",
+    "@as-integrations/express5": "^1.1.0",
+    "@prisma/client": "^6.10.1",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "graphql": "^16.11.0",
+    "nodemon": "^3.1.10",
+    "pino": "^9.7.0"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^9.8.0",
+    "pino-pretty": "^13.0.0",
+    "prisma": "^6.10.1"
+  }
+}
