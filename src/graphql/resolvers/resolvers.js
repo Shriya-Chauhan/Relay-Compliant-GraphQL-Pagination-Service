@@ -162,9 +162,8 @@ export const resolvers = {
         node: dev,
       }));
 
-      const startCursor = edges.length > 0 ? edges[0].cursor : null;
-      const endCursor =
-        edges.length > 0 ? edges[edges.length - 1].cursor : null;
+      const startCursor = edges.length > 0 ? edges[0].cursor : "";
+      const endCursor = edges.length > 0 ? edges[edges.length - 1].cursor : "";
 
       logger.debug(
         {
