@@ -91,6 +91,11 @@ npx prisma migrate dev --name init
 npm run seed
 
 ```
+To visualize data on Prisma Studio:
+```bash
+npx prisma studio
+
+```
 
 #### 5. **Start the Server**
 
