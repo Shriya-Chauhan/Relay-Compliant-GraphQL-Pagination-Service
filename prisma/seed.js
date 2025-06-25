@@ -13,9 +13,9 @@ const cities = [
 ];
 
 async function main() {
-  // Optional: clear previous data
-  // await prisma.developer.deleteMany({});
-  // await prisma.project.deleteMany({});
+  // Optional: To clear previously seeded  data
+  await prisma.developer.deleteMany({});
+  await prisma.project.deleteMany({});
 
   // Creating 10 projects
   const projects = [];
