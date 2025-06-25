@@ -144,8 +144,8 @@ export const resolvers = {
         hasPrev = !!after; // Are there items before current page?
       } else if (last) {
         // Backward pagination
-        hasNext = !!before; // Are there items after current page?" (if we have 'before' cursor, there are items after)
-        hasPrev = hasMoreResults; //Are there more items before current page?"
+        hasNext = !!before; // Are there items after current page?
+        hasPrev = hasMoreResults; //Are there more items before current page?
       }
 
       // Remove the extra item if we got it
